@@ -1,14 +1,12 @@
-import { getRouterManifest } from '@tanstack/react-start/router-manifest'
 import { getRouter } from './router'
 
 export default async function handler(req: Request) {
-    const router = getRouter()
-    const manifest = getRouterManifest()
+  const router = getRouter()
 
-    // Return empty HTML - client will render everything
-    // This avoids hydration mismatches with React Query Suspense
-    return new Response(
-      `<!DOCTYPE html>
+  // Return empty HTML - client will render everything
+  // This avoids hydration mismatches with React Query Suspense
+  return new Response(
+    `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -19,10 +17,10 @@ export default async function handler(req: Request) {
     <div id="root"></div>
   </body>
 </html>`,
-      {
-        headers: {
-          'Content-Type': 'text/html',
-        },
-      }
-    )
+    {
+      headers: {
+        'Content-Type': 'text/html',
+      },
+    }
+  )
 }
