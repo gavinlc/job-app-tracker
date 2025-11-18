@@ -1,0 +1,23 @@
+{
+  "name": "job-tracker",
+  "version": "1.0.0",
+  "description": "A job scraper using Playwright to scrape Google results from multiple job sites",
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "install:browsers": "cd backend && npx playwright install chromium"
+  },
+  "keywords": [
+    "playwright",
+    "scraper",
+    "jobs",
+    "google",
+    "typescript",
+    "react"
+  ],
+  "author": "",
+  "license": "MIT"
+}
