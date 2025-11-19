@@ -3,9 +3,16 @@ import { JobApplication } from '../types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
-import { Select } from './ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
+import { Separator } from './ui/separator';
 import { parseJobPostingFn } from '../lib/server';
 import { Alert, AlertDescription } from './ui/alert';
 
@@ -43,8 +50,12 @@ function ApplicationForm({ application, onSave, onCancel, isLoading = false }: A
     onSave(formData);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -186,18 +197,20 @@ function ApplicationForm({ application, onSave, onCancel, isLoading = false }: A
                 Status *
               </Label>
               <Select
-                id="status"
-                name="status"
                 value={formData.status}
-                onChange={handleChange}
-                required
+                onValueChange={(value) => handleSelectChange('status', value)}
               >
-                <option value="interested">Interested</option>
-                <option value="applied">Applied</option>
-                <option value="interviewing">Interviewing</option>
-                <option value="offer">Offer</option>
-                <option value="rejected">Rejected</option>
-                <option value="withdrawn">Withdrawn</option>
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="interested">Interested</SelectItem>
+                  <SelectItem value="applied">Applied</SelectItem>
+                  <SelectItem value="interviewing">Interviewing</SelectItem>
+                  <SelectItem value="offer">Offer</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="withdrawn">Withdrawn</SelectItem>
+                </SelectContent>
               </Select>
             </div>
             <div className="flex flex-col gap-2">

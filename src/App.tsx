@@ -10,6 +10,7 @@ import { JobApplication } from './types';
 import { Button } from './components/ui/button';
 import { Alert, AlertDescription } from './components/ui/alert';
 import { LayoutList, LayoutGrid, Table, Plus, X } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from './components/ui/tabs';
 
 type ViewMode = 'list' | 'kanban' | 'table';
 
@@ -103,40 +104,28 @@ function App() {
         </div>
       </header>
 
-      <main className={`${viewMode === 'kanban' ? 'w-full px-4' : 'max-w-7xl mx-auto px-4'} py-4`}>
+      <main className={`p-4`}>
+        <section className="max-w-7xl mx-auto flex flex-col gap-4">
         <Statistics onFilterByStatus={handleFilterByStatus} selectedStatus={filterStatus} />
         
         <div className="flex flex-wrap gap-3 mb-4 items-center">
           <SearchBar onSearch={handleSearch} />
-          <div className="flex gap-2 ml-auto">
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              className="flex items-center gap-2"
-            >
-              <LayoutList className="h-4 w-4" />
-              List
-            </Button>
-            <Button
-              variant={viewMode === 'table' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('table')}
-              className="flex items-center gap-2"
-            >
-              <Table className="h-4 w-4" />
-              Table
-            </Button>
-            <Button
-              variant={viewMode === 'kanban' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('kanban')}
-              className="flex items-center gap-2"
-            >
-              <LayoutGrid className="h-4 w-4" />
-              Kanban
-            </Button>
-          </div>
+          <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)} className="ml-auto">
+            <TabsList>
+              <TabsTrigger value="list" className="flex items-center gap-2">
+                <LayoutList className="h-4 w-4" />
+                List
+              </TabsTrigger>
+              <TabsTrigger value="table" className="flex items-center gap-2">
+                <Table className="h-4 w-4" />
+                Table
+              </TabsTrigger>
+              <TabsTrigger value="kanban" className="flex items-center gap-2">
+                <LayoutGrid className="h-4 w-4" />
+                Kanban
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
           <Button 
             onClick={handleAddApplication}
             className="whitespace-nowrap flex items-center gap-2"
@@ -155,6 +144,7 @@ function App() {
             </Button>
           )}
         </div>
+        </section>
 
         {error && (
           <Alert variant="destructive" className="mb-4">
@@ -175,9 +165,14 @@ function App() {
         )}
 
         {isLoading && (
-          <div className="text-center py-4 text-foreground">Loading...</div>
+          <div className="text-center py-4 text-foreground">
+            <div className="flex items-center justify-center gap-2">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <span>Loading...</span>
+            </div>
+          </div>
         )}
-
+        <section className={`${viewMode === 'kanban' ? 'w-full' : 'max-w-7xl mx-auto'}`}>
         {viewMode === 'list' ? (
           <ApplicationList
             applications={displayApplications}
@@ -198,6 +193,7 @@ function App() {
             onStatusChange={handleStatusChange}
           />
         )}
+        </section>
       </main>
     </div>
   );
