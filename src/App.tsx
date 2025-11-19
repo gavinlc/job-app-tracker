@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import ApplicationList from './components/ApplicationList';
 import ApplicationTable from './components/ApplicationTable';
 import { KanbanBoard } from './components/KanbanBoard';
@@ -6,20 +7,30 @@ import ApplicationForm from './components/ApplicationForm';
 import SearchBar from './components/SearchBar';
 import Statistics from './components/Statistics';
 import { useApplications, useSearchApplications, useCreateApplication, useUpdateApplication, useDeleteApplication } from './hooks/useApplications';
+import { useAuth } from './hooks/useAuth';
 import { JobApplication } from './types';
 import { Button } from './components/ui/button';
 import { Alert, AlertDescription } from './components/ui/alert';
-import { LayoutList, LayoutGrid, Table, Plus, X } from 'lucide-react';
+import { LayoutList, LayoutGrid, Table, Plus, X, LogOut } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from './components/ui/tabs';
 
 type ViewMode = 'list' | 'kanban' | 'table';
 
 function App() {
+  const navigate = useNavigate();
+  const { isAuthenticated, isLoading: authLoading, user, signOut } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [editingApplication, setEditingApplication] = useState<JobApplication | null>(null);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+
+  // Redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate({ to: '/sign-in' });
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
   // Use search query if provided, otherwise use filtered applications
   const shouldSearch = searchQuery.trim().length > 0;
@@ -95,12 +106,54 @@ function App() {
 
   const errorMessage = error instanceof Error ? error.message : 'Failed to fetch applications';
 
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center">
+        <div className="flex items-center justify-center gap-2">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render app content if not authenticated (redirect will happen)
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate({ to: '/sign-in' });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100" suppressHydrationWarning>
       <header className="bg-white/95 backdrop-blur-sm shadow-md border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4 text-center">
-          <h1 className="text-3xl font-bold text-slate-900 mb-1">Job Application Tracker</h1>
-          <p className="text-sm text-slate-600">Track and manage your job applications</p>
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="text-center flex-1">
+              <h1 className="text-3xl font-bold text-slate-900 mb-1">Job Application Tracker</h1>
+              <p className="text-sm text-slate-600">Track and manage your job applications</p>
+            </div>
+            <div className="flex items-center gap-3">
+              {user && (
+                <span className="text-sm text-slate-600">
+                  {user.displayName || user.primaryEmail || 'User'}
+                </span>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSignOut}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
+            </div>
+          </div>
         </div>
       </header>
 
