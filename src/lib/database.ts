@@ -1,118 +1,84 @@
-import Database from 'better-sqlite3';
+import { neon } from '@neondatabase/serverless';
 import { JobApplication } from '../types';
 
-// Only initialize database on server side
-let db: Database.Database | null = null;
+const sql = neon(process.env.DATABASE_URL!);
 
-function getDb(): Database.Database {
-  if (typeof window !== 'undefined') {
-    throw new Error('Database can only be accessed on the server side');
-  }
-  if (!db) {
-    db = new Database('applications.db');
-    // Initialize database schema
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS applications (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        company TEXT NOT NULL,
-        position TEXT NOT NULL,
-        location TEXT,
-        job_url TEXT,
-        status TEXT NOT NULL DEFAULT 'interested',
-        date_applied TEXT NOT NULL,
-        notes TEXT,
-        salary TEXT,
-        contact_name TEXT,
-        contact_email TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        CHECK(status IN ('interested', 'applied', 'interviewing', 'offer', 'rejected', 'withdrawn'))
-      );
-
-      CREATE INDEX IF NOT EXISTS idx_status ON applications(status);
-      CREATE INDEX IF NOT EXISTS idx_date_applied ON applications(date_applied);
-      CREATE INDEX IF NOT EXISTS idx_company ON applications(company);
-    `);
-  }
-  return db;
+export async function getAllApplications() {
+  const rows = await sql`SELECT * FROM applications ORDER BY date_applied DESC, created_at DESC`;
+  return rows.map(rowToApplication);
 }
 
-export const insertApplication = (() => {
-  const db = getDb();
-  return db.prepare(`
+export async function getApplicationById(id: number) {
+  const rows = await sql`SELECT * FROM applications WHERE id = ${id}`;
+  return rows.length ? rowToApplication(rows[0]) : null;
+}
+
+export async function getApplicationsByStatus(status: string) {
+  const rows = await sql`SELECT * FROM applications WHERE status = ${status} ORDER BY date_applied DESC, created_at DESC`;
+  return rows.map(rowToApplication);
+}
+
+export async function insertApplication(application: JobApplication) {
+  const { company, position, location, jobUrl, status, dateApplied, notes, salary, contactName, contactEmail } = application;
+  const rows = await sql`
     INSERT INTO applications (company, position, location, job_url, status, date_applied, notes, salary, contact_name, contact_email)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-})();
+    VALUES (${company}, ${position}, ${location}, ${jobUrl}, ${status}, ${dateApplied}, ${notes}, ${salary}, ${contactName}, ${contactEmail})
+    RETURNING *
+  `;
+  return rowToApplication(rows[0]);
+}
 
-export const getAllApplications = (() => {
-  const db = getDb();
-  return db.prepare(`
+export async function updateApplication(id: number, application: JobApplication) {
+  const { company, position, location, jobUrl, status, dateApplied, notes, salary, contactName, contactEmail } = application;
+  const rows = await sql`
+    UPDATE applications SET
+      company = ${company},
+      position = ${position},
+      location = ${location},
+      job_url = ${jobUrl},
+      status = ${status},
+      date_applied = ${dateApplied},
+      notes = ${notes},
+      salary = ${salary},
+      contact_name = ${contactName},
+      contact_email = ${contactEmail},
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = ${id}
+    RETURNING *
+  `;
+  return rowToApplication(rows[0]);
+}
+
+export async function deleteApplication(id: number) {
+  await sql`DELETE FROM applications WHERE id = ${id}`;
+  return { success: true };
+}
+
+export async function searchApplications(query: string) {
+  const searchTerm = `%${query}%`;
+  const rows = await sql`
     SELECT * FROM applications
+    WHERE company ILIKE ${searchTerm} OR position ILIKE ${searchTerm} OR notes ILIKE ${searchTerm} OR location ILIKE ${searchTerm}
     ORDER BY date_applied DESC, created_at DESC
-  `);
-})();
+  `;
+  return rows.map(rowToApplication);
+}
 
-export const getApplicationById = (() => {
-  const db = getDb();
-  return db.prepare(`
-    SELECT * FROM applications
-    WHERE id = ?
-  `);
-})();
-
-export const getApplicationsByStatus = (() => {
-  const db = getDb();
-  return db.prepare(`
-    SELECT * FROM applications
-    WHERE status = ?
-    ORDER BY date_applied DESC, created_at DESC
-  `);
-})();
-
-export const updateApplication = (() => {
-  const db = getDb();
-  return db.prepare(`
-    UPDATE applications
-    SET company = ?, position = ?, location = ?, job_url = ?, status = ?, date_applied = ?, 
-        notes = ?, salary = ?, contact_name = ?, contact_email = ?, updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `);
-})();
-
-export const deleteApplication = (() => {
-  const db = getDb();
-  return db.prepare(`
-    DELETE FROM applications
-    WHERE id = ?
-  `);
-})();
-
-export const searchApplications = (() => {
-  const db = getDb();
-  return db.prepare(`
-    SELECT * FROM applications
-    WHERE company LIKE ? OR position LIKE ? OR notes LIKE ? OR location LIKE ?
-    ORDER BY date_applied DESC, created_at DESC
-  `);
-})();
-
-// Helper to convert database row to application object
-export const rowToApplication = (row: any): JobApplication => ({
-  id: row.id,
-  company: row.company,
-  position: row.position,
-  location: row.location || undefined,
-  jobUrl: row.job_url || undefined,
-  status: row.status,
-  dateApplied: row.date_applied,
-  notes: row.notes || undefined,
-  salary: row.salary || undefined,
-  contactName: row.contact_name || undefined,
-  contactEmail: row.contact_email || undefined,
-  createdAt: row.created_at,
-  updatedAt: row.updated_at,
-});
-
-export default getDb;
+export function rowToApplication(row: any): JobApplication {
+  return {
+    id: row.id,
+    company: row.company,
+    position: row.position,
+    location: row.location || undefined,
+    jobUrl: row.job_url || undefined,
+    status: row.status,
+    dateApplied: row.date_applied,
+    notes: row.notes || undefined,
+    salary: row.salary || undefined,
+    contactName: row.contact_name || undefined,
+    contactEmail: row.contact_email || undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
 

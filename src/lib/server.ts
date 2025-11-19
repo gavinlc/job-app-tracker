@@ -18,9 +18,9 @@ export const getAllApplicationsFn = createServerFn()
     try {
       const { status } = data
       const rows = status
-        ? getApplicationsByStatus.all(status)
-        : getAllApplications.all()
-      return rows.map(rowToApplication)
+        ? await getApplicationsByStatus(status)
+        : await getAllApplications()
+      return rows
     } catch (error) {
       console.error('Error fetching applications:', error)
       throw new Error('Failed to fetch applications')
@@ -33,7 +33,7 @@ export const getApplicationByIdFn = createServerFn()
   .handler(async ({ data }) => {
     try {
       const { id } = data
-      const row = getApplicationById.get(id)
+      const row = await getApplicationById(id)
       if (!row) {
         throw new Error('Application not found')
       }
@@ -54,7 +54,7 @@ export const searchApplicationsFn = createServerFn()
         return []
       }
       const searchTerm = `%${query}%`
-      const rows = searchApplications.all(searchTerm, searchTerm, searchTerm, searchTerm)
+      const rows = await searchApplications(searchTerm)
       return rows.map(rowToApplication)
     } catch (error) {
       console.error('Error searching applications:', error)
@@ -77,20 +77,7 @@ export const createApplicationFn = createServerFn()
         throw new Error('Invalid status')
       }
 
-      const result = insertApplication.run(
-        application.company,
-        application.position,
-        application.location || null,
-        application.jobUrl || null,
-        application.status,
-        application.dateApplied,
-        application.notes || null,
-        application.salary || null,
-        application.contactName || null,
-        application.contactEmail || null
-      )
-
-      const newApplication = getApplicationById.get(result.lastInsertRowid as number)
+      const newApplication = await insertApplication(application)
       return rowToApplication(newApplication)
     } catch (error) {
       console.error('Error creating application:', error)
@@ -105,7 +92,7 @@ export const updateApplicationFn = createServerFn()
     try {
       const { id, application } = data
 
-      const existing = getApplicationById.get(id)
+      const existing = await getApplicationById(id)
       if (!existing) {
         throw new Error('Application not found')
       }
@@ -118,21 +105,12 @@ export const updateApplicationFn = createServerFn()
         throw new Error('Invalid status')
       }
 
-      updateApplication.run(
-        application.company,
-        application.position,
-        application.location || null,
-        application.jobUrl || null,
-        application.status,
-        application.dateApplied,
-        application.notes || null,
-        application.salary || null,
-        application.contactName || null,
-        application.contactEmail || null,
-        id
+      await updateApplication(
+        id,
+        application
       )
 
-      const updated = getApplicationById.get(id)
+      const updated = await getApplicationById(id)
       return rowToApplication(updated)
     } catch (error) {
       console.error('Error updating application:', error)
@@ -147,12 +125,12 @@ export const deleteApplicationFn = createServerFn()
     try {
       const { id } = data
 
-      const existing = getApplicationById.get(id)
+      const existing = await getApplicationById(id)
       if (!existing) {
         throw new Error('Application not found')
       }
 
-      deleteApplication.run(id)
+      await deleteApplication(id)
       return { success: true }
     } catch (error) {
       console.error('Error deleting application:', error)
@@ -165,7 +143,7 @@ export const getStatisticsFn = createServerFn()
   .inputValidator((input: undefined) => input)
   .handler(async () => {
     try {
-      const allRows = getAllApplications.all()
+      const allRows = await getAllApplications()
       const total = allRows.length
       const byStatus: Record<string, number> = allRows.reduce((acc: Record<string, number>, row: any) => {
         const status = row.status as string
