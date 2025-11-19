@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build && tsc --noEmit",
+    "serve": "vite preview",
     "start": "vite start"
   },
   "dependencies": {
@@ -19,6 +20,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.446.0",
+    "nitro": "^3.0.1-alpha.1",
     "openai": "^4.67.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
