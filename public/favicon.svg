@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Background with gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bgGradient)"/>
+  
+  <!-- Briefcase body -->
+  <rect x="18" y="22" width="28" height="20" rx="2" fill="white" opacity="0.95"/>
+  
+  <!-- Briefcase handle -->
+  <path d="M26 22v-3c0-1.5 1.3-3 3-3h6c1.7 0 3 1.5 3 3v3" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  
+  <!-- Lock/clasp detail -->
+  <rect x="29" y="24" width="6" height="4" rx="1" fill="#3b82f6" opacity="0.6"/>
+  
+  <!-- Document/application lines inside briefcase -->
+  <line x1="24" y1="32" x2="40" y2="32" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+  <line x1="24" y1="36" x2="40" y2="36" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+  <line x1="24" y1="40" x2="36" y2="40" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+</svg>
+
