@@ -8,6 +8,11 @@ export default defineConfig({
   server: {
     port: 3000,
   },
+  preview: {
+    port: 3000,
+    host: '0.0.0.0',
+    allowedHosts: ['localhost', '127.0.0.1', 'job-app-tracker-production.up.railway.app'],
+  },
   plugins: [
     nitro(),
     tsConfigPaths({
@@ -17,5 +22,9 @@ export default defineConfig({
     viteReact(),
     
   ],
+  nitro: {
+    preset: 'node-server',
+    
+  }
 })
 
