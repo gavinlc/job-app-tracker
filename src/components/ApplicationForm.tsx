@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Select } from './ui/select';
+import { Label } from './ui/label';
 import { Button } from './ui/button';
 import { parseJobPostingFn } from '../lib/server';
 import { Alert, AlertDescription } from './ui/alert';
@@ -94,9 +95,9 @@ function ApplicationForm({ application, onSave, onCancel, isLoading = false }: A
         )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="jobUrl" className="font-semibold text-sm">
+            <Label htmlFor="jobUrl">
               Job Posting URL
-            </label>
+            </Label>
             <div className="flex gap-2">
               <Input
                 id="jobUrl"
@@ -123,9 +124,9 @@ function ApplicationForm({ application, onSave, onCancel, isLoading = false }: A
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="company" className="font-semibold text-sm">
+              <Label htmlFor="company">
                 Company *
-              </label>
+              </Label>
               <Input
                 id="company"
                 name="company"
@@ -136,9 +137,9 @@ function ApplicationForm({ application, onSave, onCancel, isLoading = false }: A
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label htmlFor="position" className="font-semibold text-sm">
+              <Label htmlFor="position">
                 Position *
-              </label>
+              </Label>
               <Input
                 id="position"
                 name="position"
@@ -152,9 +153,9 @@ function ApplicationForm({ application, onSave, onCancel, isLoading = false }: A
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="location" className="font-semibold text-sm">
+              <Label htmlFor="location">
                 Location
-              </label>
+              </Label>
               <Input
                 id="location"
                 name="location"
@@ -165,9 +166,9 @@ function ApplicationForm({ application, onSave, onCancel, isLoading = false }: A
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label htmlFor="dateApplied" className="font-semibold text-sm">
+              <Label htmlFor="dateApplied">
                 Date Applied *
-              </label>
+              </Label>
               <Input
                 id="dateApplied"
                 name="dateApplied"
@@ -181,9 +182,9 @@ function ApplicationForm({ application, onSave, onCancel, isLoading = false }: A
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="status" className="font-semibold text-sm">
+              <Label htmlFor="status">
                 Status *
-              </label>
+              </Label>
               <Select
                 id="status"
                 name="status"
@@ -200,9 +201,9 @@ function ApplicationForm({ application, onSave, onCancel, isLoading = false }: A
               </Select>
             </div>
             <div className="flex flex-col gap-2">
-              <label htmlFor="salary" className="font-semibold text-sm">
+              <Label htmlFor="salary">
                 Salary
-              </label>
+              </Label>
               <Input
                 id="salary"
                 name="salary"
@@ -216,9 +217,9 @@ function ApplicationForm({ application, onSave, onCancel, isLoading = false }: A
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="contactName" className="font-semibold text-sm">
+              <Label htmlFor="contactName">
                 Contact Name
-              </label>
+              </Label>
               <Input
                 id="contactName"
                 name="contactName"
@@ -228,9 +229,9 @@ function ApplicationForm({ application, onSave, onCancel, isLoading = false }: A
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label htmlFor="contactEmail" className="font-semibold text-sm">
+              <Label htmlFor="contactEmail">
                 Contact Email
-              </label>
+              </Label>
               <Input
                 id="contactEmail"
                 name="contactEmail"
@@ -242,9 +243,9 @@ function ApplicationForm({ application, onSave, onCancel, isLoading = false }: A
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="notes" className="font-semibold text-sm">
+            <Label htmlFor="notes">
               Notes
-            </label>
+            </Label>
             <Textarea
               id="notes"
               name="notes"

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ApplicationList from './components/ApplicationList';
+import ApplicationTable from './components/ApplicationTable';
 import { KanbanBoard } from './components/KanbanBoard';
 import ApplicationForm from './components/ApplicationForm';
 import SearchBar from './components/SearchBar';
@@ -8,9 +9,9 @@ import { useApplications, useSearchApplications, useCreateApplication, useUpdate
 import { JobApplication } from './types';
 import { Button } from './components/ui/button';
 import { Alert, AlertDescription } from './components/ui/alert';
-import { LayoutList, LayoutGrid } from 'lucide-react';
+import { LayoutList, LayoutGrid, Table, Plus, X } from 'lucide-react';
 
-type ViewMode = 'list' | 'kanban';
+type ViewMode = 'list' | 'kanban' | 'table';
 
 function App() {
   const [showForm, setShowForm] = useState(false);
@@ -118,6 +119,15 @@ function App() {
               List
             </Button>
             <Button
+              variant={viewMode === 'table' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('table')}
+              className="flex items-center gap-2"
+            >
+              <Table className="h-4 w-4" />
+              Table
+            </Button>
+            <Button
               variant={viewMode === 'kanban' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setViewMode('kanban')}
@@ -129,15 +139,18 @@ function App() {
           </div>
           <Button 
             onClick={handleAddApplication}
-            className="whitespace-nowrap"
+            className="whitespace-nowrap flex items-center gap-2"
           >
-            + Add Application
+            <Plus className="h-4 w-4" />
+            Add Application
           </Button>
           {filterStatus && (
             <Button 
               onClick={() => handleFilterByStatus(null)}
               variant="outline"
+              className="flex items-center gap-2"
             >
+              <X className="h-4 w-4" />
               Clear Filter
             </Button>
           )}
@@ -167,6 +180,12 @@ function App() {
 
         {viewMode === 'list' ? (
           <ApplicationList
+            applications={displayApplications}
+            onEdit={handleEditApplication}
+            onDelete={handleDeleteApplication}
+          />
+        ) : viewMode === 'table' ? (
+          <ApplicationTable
             applications={displayApplications}
             onEdit={handleEditApplication}
             onDelete={handleDeleteApplication}
