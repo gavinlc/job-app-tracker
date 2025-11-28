@@ -1,18 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import ApplicationList from './components/ApplicationList';
-import ApplicationTable from './components/ApplicationTable';
-import { KanbanBoard } from './components/KanbanBoard';
 import ApplicationForm from './components/ApplicationForm';
-import SearchBar from './components/SearchBar';
 import Statistics from './components/Statistics';
-import { useApplications, useSearchApplications, useCreateApplication, useUpdateApplication, useDeleteApplication } from './hooks/useApplications';
+import { Header } from './components/Header';
+import { Toolbar } from './components/Toolbar';
+import { ViewRenderer } from './components/ViewRenderer';
+import { LoadingSpinner } from './components/LoadingSpinner';
+import { useApplications, useSearchApplications, useCreateApplication, useUpdateApplication, useDeleteApplication, useToggleStarApplication } from './hooks/useApplications';
 import { useAuth } from './hooks/useAuth';
 import { JobApplication } from './types';
-import { Button } from './components/ui/button';
 import { Alert, AlertDescription } from './components/ui/alert';
-import { LayoutList, LayoutGrid, Table, Plus, X, LogOut } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from './components/ui/tabs';
 
 type ViewMode = 'list' | 'kanban' | 'table';
 
@@ -22,6 +19,8 @@ function App() {
   const [showForm, setShowForm] = useState(false);
   const [editingApplication, setEditingApplication] = useState<JobApplication | null>(null);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [filterStarred, setFilterStarred] = useState(false);
+  const [filterActive, setFilterActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
@@ -34,8 +33,8 @@ function App() {
 
   // Use search query if provided, otherwise use filtered applications
   const shouldSearch = searchQuery.trim().length > 0;
-  const { data: searchResults } = useSearchApplications(searchQuery, shouldSearch);
-  const { data: applications = [], isLoading, error } = useApplications(shouldSearch ? null : filterStatus);
+  const { data: searchResults } = useSearchApplications(searchQuery, shouldSearch, filterStarred, filterActive);
+  const { data: applications = [], isLoading, error } = useApplications(shouldSearch ? null : filterStatus, filterStarred, filterActive);
 
   // Determine which data to display
   const displayApplications = shouldSearch ? (searchResults || []) : applications;
@@ -43,6 +42,7 @@ function App() {
   const createMutation = useCreateApplication();
   const updateMutation = useUpdateApplication();
   const deleteMutation = useDeleteApplication();
+  const toggleStarMutation = useToggleStarApplication();
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -90,6 +90,21 @@ function App() {
     setSearchQuery(''); // Clear search when filtering
   };
 
+  const handleToggleStarredFilter = () => {
+    setFilterStarred(!filterStarred);
+  };
+
+  const handleToggleActiveFilter = () => {
+    setFilterActive(!filterActive);
+  };
+
+  const handleClearFilters = () => {
+    setFilterStatus(null);
+    setFilterStarred(false);
+    setFilterActive(false);
+    setSearchQuery('');
+  };
+
   const handleStatusChange = async (id: number, newStatus: JobApplication['status']) => {
     try {
       const application = displayApplications.find((app) => app.id === id);
@@ -104,18 +119,19 @@ function App() {
     }
   };
 
+  const handleToggleStar = async (id: number) => {
+    try {
+      await toggleStarMutation.mutateAsync(id);
+    } catch (err) {
+      console.error('Failed to toggle star:', err);
+    }
+  };
+
   const errorMessage = error instanceof Error ? error.message : 'Failed to fetch applications';
 
   // Show loading state while checking authentication
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center">
-        <div className="flex items-center justify-center gap-2">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <span>Loading...</span>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner fullScreen />;
   }
 
   // Don't render app content if not authenticated (redirect will happen)
@@ -130,73 +146,23 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100" suppressHydrationWarning>
-      <header className="bg-white/95 backdrop-blur-sm shadow-md border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="text-center flex-1">
-              <h1 className="text-3xl font-bold text-slate-900 mb-1">Job Application Tracker</h1>
-              <p className="text-sm text-slate-600">Track and manage your job applications</p>
-            </div>
-            <div className="flex items-center gap-3">
-              {user && (
-                <span className="text-sm text-slate-600">
-                  {user.displayName || user.primaryEmail || 'User'}
-                </span>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSignOut}
-                className="flex items-center gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                Sign Out
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header user={user} onSignOut={handleSignOut} />
 
-      <main className={`p-4`}>
+      <main className="p-4">
         <section className="max-w-7xl mx-auto flex flex-col gap-4">
-        <Statistics onFilterByStatus={handleFilterByStatus} selectedStatus={filterStatus} />
-        
-        <div className="flex flex-wrap gap-3 mb-4 items-center">
-          <SearchBar onSearch={handleSearch} />
-          <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)} className="ml-auto">
-            <TabsList>
-              <TabsTrigger value="list" className="flex items-center gap-2">
-                <LayoutList className="h-4 w-4" />
-                List
-              </TabsTrigger>
-              <TabsTrigger value="table" className="flex items-center gap-2">
-                <Table className="h-4 w-4" />
-                Table
-              </TabsTrigger>
-              <TabsTrigger value="kanban" className="flex items-center gap-2">
-                <LayoutGrid className="h-4 w-4" />
-                Kanban
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <Button 
-            onClick={handleAddApplication}
-            className="whitespace-nowrap flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Add Application
-          </Button>
-          {filterStatus && (
-            <Button 
-              onClick={() => handleFilterByStatus(null)}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <X className="h-4 w-4" />
-              Clear Filter
-            </Button>
-          )}
-        </div>
+          <Statistics onFilterByStatus={handleFilterByStatus} selectedStatus={filterStatus} />
+          <Toolbar
+            viewMode={viewMode}
+            onViewModeChange={(value) => setViewMode(value as ViewMode)}
+            onSearch={handleSearch}
+            onAddApplication={handleAddApplication}
+            filterStarred={filterStarred}
+            filterActive={filterActive}
+            filterStatus={filterStatus}
+            onToggleStarredFilter={handleToggleStarredFilter}
+            onToggleActiveFilter={handleToggleActiveFilter}
+            onClearFilters={handleClearFilters}
+          />
         </section>
 
         {error && (
@@ -217,36 +183,15 @@ function App() {
           />
         )}
 
-        {isLoading && (
-          <div className="text-center py-4 text-foreground">
-            <div className="flex items-center justify-center gap-2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              <span>Loading...</span>
-            </div>
-          </div>
-        )}
-        <section className={`${viewMode === 'kanban' ? 'w-full' : 'max-w-7xl mx-auto'}`}>
-        {viewMode === 'list' ? (
-          <ApplicationList
-            applications={displayApplications}
-            onEdit={handleEditApplication}
-            onDelete={handleDeleteApplication}
-          />
-        ) : viewMode === 'table' ? (
-          <ApplicationTable
-            applications={displayApplications}
-            onEdit={handleEditApplication}
-            onDelete={handleDeleteApplication}
-          />
-        ) : (
-          <KanbanBoard
-            applications={displayApplications}
-            onEdit={handleEditApplication}
-            onDelete={handleDeleteApplication}
-            onStatusChange={handleStatusChange}
-          />
-        )}
-        </section>
+        {isLoading && <LoadingSpinner />}
+        <ViewRenderer
+          viewMode={viewMode}
+          applications={displayApplications}
+          onEdit={handleEditApplication}
+          onDelete={handleDeleteApplication}
+          onToggleStar={handleToggleStar}
+          onStatusChange={handleStatusChange}
+        />
       </main>
     </div>
   );

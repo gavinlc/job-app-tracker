@@ -6,6 +6,7 @@ import {
   createApplicationFn,
   updateApplicationFn,
   deleteApplicationFn,
+  toggleStarApplicationFn,
 } from '../lib/server';
 import { JobApplication } from '../types';
 
@@ -20,23 +21,23 @@ export const applicationKeys = {
   search: (query: string) => [...applicationKeys.searches(), query] as const,
 };
 
-// Get all applications (optionally filtered by status)
-export function useApplications(status: string | null = null) {
+// Get all applications (optionally filtered by status, starred, and active)
+export function useApplications(status: string | null = null, starredOnly: boolean = false, activeOnly: boolean = false) {
   return useQuery({
-    queryKey: applicationKeys.list(status),
+    queryKey: [...applicationKeys.list(status), starredOnly ? 'starred' : 'all', activeOnly ? 'active' : 'all'],
     queryFn: async () => {
-      const result = await getAllApplicationsFn({ data: { status } })
+      const result = await getAllApplicationsFn({ data: { status, starredOnly, activeOnly } })
       return result
     },
   });
 }
 
 // Search applications
-export function useSearchApplications(query: string, enabled: boolean = true) {
+export function useSearchApplications(query: string, enabled: boolean = true, starredOnly: boolean = false, activeOnly: boolean = false) {
   return useQuery({
-    queryKey: applicationKeys.search(query),
+    queryKey: [...applicationKeys.search(query), starredOnly ? 'starred' : 'all', activeOnly ? 'active' : 'all'],
     queryFn: async () => {
-      const result = await searchApplicationsFn({ data: { query } })
+      const result = await searchApplicationsFn({ data: { query, starredOnly, activeOnly } })
       return result
     },
     enabled: enabled && query.trim().length > 0,
@@ -100,6 +101,23 @@ export function useDeleteApplication() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: applicationKeys.all });
       queryClient.invalidateQueries({ queryKey: ['statistics'] });
+    },
+  });
+}
+
+// Toggle star status mutation
+export function useToggleStarApplication() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const result = await toggleStarApplicationFn({ data: { id } })
+      return result
+    },
+    onSuccess: (data, id) => {
+      // Optimistically update the cache
+      queryClient.setQueryData(applicationKeys.detail(id), data);
+      queryClient.invalidateQueries({ queryKey: applicationKeys.lists() });
     },
   });
 }

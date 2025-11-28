@@ -11,9 +11,10 @@ interface KanbanColumnProps {
   applications: JobApplication[];
   onEdit: (application: JobApplication) => void;
   onDelete: (id: number) => void;
+  onToggleStar?: (id: number) => void;
 }
 
-export function KanbanColumn({ id, title, applications, onEdit, onDelete }: KanbanColumnProps) {
+export function KanbanColumn({ id, title, applications, onEdit, onDelete, onToggleStar }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id,
   });
@@ -51,6 +52,7 @@ export function KanbanColumn({ id, title, applications, onEdit, onDelete }: Kanb
                   application={app}
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  onToggleStar={onToggleStar}
                 />
               ))
             )}

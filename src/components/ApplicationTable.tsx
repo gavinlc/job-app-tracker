@@ -2,6 +2,7 @@ import { JobApplication } from '../types';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
+import { Star } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -15,6 +16,7 @@ interface ApplicationTableProps {
   applications: JobApplication[];
   onEdit: (application: JobApplication) => void;
   onDelete: (id: number) => void;
+  onToggleStar?: (id: number) => void;
 }
 
 const statusLabels: Record<string, string> = {
@@ -35,7 +37,7 @@ const statusStyles: Record<string, { bg: string; text: string; border: string }>
   withdrawn: { bg: 'bg-gray-50', text: 'text-gray-600', border: 'border-gray-500' },
 };
 
-function ApplicationTable({ applications, onEdit, onDelete }: ApplicationTableProps) {
+function ApplicationTable({ applications, onEdit, onDelete, onToggleStar }: ApplicationTableProps) {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -59,6 +61,7 @@ function ApplicationTable({ applications, onEdit, onDelete }: ApplicationTablePr
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12"></TableHead>
               <TableHead>Company</TableHead>
               <TableHead>Position</TableHead>
               <TableHead>Location</TableHead>
@@ -74,6 +77,24 @@ function ApplicationTable({ applications, onEdit, onDelete }: ApplicationTablePr
               const statusStyle = statusStyles[app.status] || statusStyles.interested;
               return (
                 <TableRow key={app.id}>
+                  <TableCell>
+                    {onToggleStar && app.id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => onToggleStar(app.id!)}
+                      >
+                        <Star
+                          className={`h-4 w-4 ${
+                            app.isStarred
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'text-muted-foreground hover:text-yellow-400'
+                          }`}
+                        />
+                      </Button>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="font-medium">{app.company}</div>
                   </TableCell>

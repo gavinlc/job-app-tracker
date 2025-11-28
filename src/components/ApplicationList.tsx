@@ -2,14 +2,16 @@ import { JobApplication } from '../types';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
+import { Star } from 'lucide-react';
 
 interface ApplicationListProps {
   applications: JobApplication[];
   onEdit: (application: JobApplication) => void;
   onDelete: (id: number) => void;
+  onToggleStar?: (id: number) => void;
 }
 
-function ApplicationList({ applications, onEdit, onDelete }: ApplicationListProps) {
+function ApplicationList({ applications, onEdit, onDelete, onToggleStar }: ApplicationListProps) {
   const statusLabels: Record<string, string> = {
     interested: 'Interested',
     applied: 'Applied',
@@ -59,7 +61,25 @@ function ApplicationList({ applications, onEdit, onDelete }: ApplicationListProp
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-3 gap-3">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold mb-0.5">{app.position}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-semibold mb-0.5">{app.position}</h3>
+                        {onToggleStar && app.id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            onClick={() => onToggleStar(app.id!)}
+                          >
+                            <Star
+                              className={`h-4 w-4 ${
+                                app.isStarred
+                                  ? 'fill-yellow-400 text-yellow-400'
+                                  : 'text-muted-foreground hover:text-yellow-400'
+                              }`}
+                            />
+                          </Button>
+                        )}
+                      </div>
                       <h4 className="text-base text-muted-foreground font-medium">{app.company}</h4>
                     </div>
                     <Badge

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { JobApplication } from '../types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { Input } from './ui/input';
@@ -35,13 +35,47 @@ function ApplicationForm({ application, onSave, onCancel, isLoading = false }: A
     salary: '',
     contactName: '',
     contactEmail: '',
+    isStarred: false,
   });
+
   const [isParsing, setIsParsing] = useState(false);
   const [parseError, setParseError] = useState<string | null>(null);
 
   useEffect(() => {
     if (application) {
-      setFormData(application);
+      // Normalize application data to ensure all string fields are defined (never undefined)
+      // This prevents React from switching between controlled and uncontrolled inputs
+      setFormData({
+        company: application.company || '',
+        position: application.position || '',
+        location: application.location || '',
+        jobUrl: application.jobUrl || '',
+        status: application.status || 'interested',
+        dateApplied: application.dateApplied || new Date().toISOString().split('T')[0],
+        notes: application.notes || '',
+        salary: application.salary || '',
+        contactName: application.contactName || '',
+        contactEmail: application.contactEmail || '',
+        isStarred: application.isStarred ?? false,
+        id: application.id,
+        createdAt: application.createdAt,
+        updatedAt: application.updatedAt,
+      });
+    } else {
+      // Reset to defaults when creating a new application
+      setFormData({
+        company: '',
+        position: '',
+        location: '',
+        jobUrl: '',
+        status: 'interested',
+        dateApplied: new Date().toISOString().split('T')[0],
+        notes: '',
+        salary: '',
+        contactName: '',
+        contactEmail: '',
+        isStarred: false,
+      });
     }
   }, [application]);
 
@@ -56,7 +90,10 @@ function ApplicationForm({ application, onSave, onCancel, isLoading = false }: A
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (!value) return;
+    setFormData((prev) => {
+      return { ...prev, [name]: value };
+    });
   };
 
   const handleFetchFromUrl = async () => {
@@ -197,6 +234,7 @@ function ApplicationForm({ application, onSave, onCancel, isLoading = false }: A
                 Status *
               </Label>
               <Select
+                
                 value={formData.status}
                 onValueChange={(value) => handleSelectChange('status', value)}
               >

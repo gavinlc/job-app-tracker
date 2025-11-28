@@ -23,6 +23,7 @@ interface KanbanBoardProps {
   onEdit: (application: JobApplication) => void;
   onDelete: (id: number) => void;
   onStatusChange: (id: number, newStatus: JobApplication['status']) => void;
+  onToggleStar?: (id: number) => void;
 }
 
 const statuses: JobApplication['status'][] = ['interested', 'applied', 'interviewing', 'offer', 'rejected', 'withdrawn'];
@@ -36,7 +37,7 @@ const statusLabels: Record<string, string> = {
   withdrawn: 'Withdrawn',
 };
 
-export function KanbanBoard({ applications, onEdit, onDelete, onStatusChange }: KanbanBoardProps) {
+export function KanbanBoard({ applications, onEdit, onDelete, onStatusChange, onToggleStar }: KanbanBoardProps) {
   const [activeId, setActiveId] = React.useState<number | null>(null);
 
   const sensors = useSensors(
@@ -134,6 +135,7 @@ export function KanbanBoard({ applications, onEdit, onDelete, onStatusChange }: 
               applications={columnApps}
               onEdit={onEdit}
               onDelete={onDelete}
+              onToggleStar={onToggleStar}
             />
           );
         })}

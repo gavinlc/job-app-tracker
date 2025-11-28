@@ -7,19 +7,20 @@ import {
   updateApplication,
   deleteApplication,
   searchApplications,
+  toggleStarApplication,
   rowToApplication,
 } from './database'
 import { JobApplication } from '../types'
 
 // Get all applications
 export const getAllApplicationsFn = createServerFn()
-  .inputValidator((input: { status?: string | null }) => input)
+  .inputValidator((input: { status?: string | null; starredOnly?: boolean; activeOnly?: boolean }) => input)
   .handler(async ({ data }) => {
     try {
-      const { status } = data
+      const { status, starredOnly, activeOnly } = data
       const rows = status
-        ? await getApplicationsByStatus(status)
-        : await getAllApplications()
+        ? await getApplicationsByStatus(status, starredOnly, activeOnly)
+        : await getAllApplications(starredOnly, activeOnly)
       return rows
     } catch (error) {
       console.error('Error fetching applications:', error)
@@ -46,15 +47,15 @@ export const getApplicationByIdFn = createServerFn()
 
 // Search applications
 export const searchApplicationsFn = createServerFn()
-  .inputValidator((input: { query: string }) => input)
+  .inputValidator((input: { query: string; starredOnly?: boolean; activeOnly?: boolean }) => input)
   .handler(async ({ data }) => {
     try {
-      const { query } = data
+      const { query, starredOnly, activeOnly } = data
       if (!query || query.trim().length === 0) {
         return []
       }
       const searchTerm = `%${query}%`
-      const rows = await searchApplications(searchTerm)
+      const rows = await searchApplications(searchTerm, starredOnly, activeOnly)
       return rows.map(rowToApplication)
     } catch (error) {
       console.error('Error searching applications:', error)
@@ -135,6 +136,26 @@ export const deleteApplicationFn = createServerFn()
     } catch (error) {
       console.error('Error deleting application:', error)
       throw error instanceof Error ? error : new Error('Failed to delete application')
+    }
+  })
+
+// Toggle star status
+export const toggleStarApplicationFn = createServerFn()
+  .inputValidator((input: { id: number }) => input)
+  .handler(async ({ data }) => {
+    try {
+      const { id } = data
+
+      const existing = await getApplicationById(id)
+      if (!existing) {
+        throw new Error('Application not found')
+      }
+
+      const updated = await toggleStarApplication(id)
+      return rowToApplication(updated)
+    } catch (error) {
+      console.error('Error toggling star status:', error)
+      throw error instanceof Error ? error : new Error('Failed to toggle star status')
     }
   })
 

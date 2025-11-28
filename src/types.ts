@@ -10,6 +10,7 @@ export interface JobApplication {
   salary?: string;
   contactName?: string;
   contactEmail?: string;
+  isStarred?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -3,16 +3,17 @@ import { CSS } from '@dnd-kit/utilities';
 import { JobApplication } from '../types';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, Star } from 'lucide-react';
 
 interface KanbanCardProps {
   application: JobApplication;
   onEdit?: (application: JobApplication) => void;
   onDelete?: (id: number) => void;
+  onToggleStar?: (id: number) => void;
   isDragging?: boolean;
 }
 
-export function KanbanCard({ application, onEdit, onDelete, isDragging }: KanbanCardProps) {
+export function KanbanCard({ application, onEdit, onDelete, onToggleStar, isDragging }: KanbanCardProps) {
   const {
     attributes,
     listeners,
@@ -57,6 +58,25 @@ export function KanbanCard({ application, onEdit, onDelete, isDragging }: Kanban
             <h3 className="font-semibold text-sm mb-0.5 truncate">{application.position}</h3>
             <h4 className="text-xs text-muted-foreground truncate">{application.company}</h4>
           </div>
+          {onToggleStar && application.id && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 mt-0.5"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleStar(application.id!);
+              }}
+            >
+              <Star
+                className={`h-3.5 w-3.5 ${
+                  application.isStarred
+                    ? 'fill-yellow-400 text-yellow-400'
+                    : 'text-muted-foreground hover:text-yellow-400'
+                }`}
+              />
+            </Button>
+          )}
         </div>
 
         {application.location && (
