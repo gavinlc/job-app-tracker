@@ -14,27 +14,33 @@ import { JobApplication } from '../types'
 
 // Get all applications
 export const getAllApplicationsFn = createServerFn()
-  .inputValidator((input: { status?: string | null; starredOnly?: boolean; activeOnly?: boolean }) => input)
+  .inputValidator((input: { status?: string | null; starredOnly?: boolean; activeOnly?: boolean; userId: string }) => input)
   .handler(async ({ data }) => {
     try {
-      const { status, starredOnly, activeOnly } = data
+      const { status, starredOnly, activeOnly, userId } = data
+      if (!userId) {
+        throw new Error('Unauthorized')
+      }
       const rows = status
-        ? await getApplicationsByStatus(status, starredOnly, activeOnly)
-        : await getAllApplications(starredOnly, activeOnly)
+        ? await getApplicationsByStatus(status, userId, starredOnly, activeOnly)
+        : await getAllApplications(userId, starredOnly, activeOnly)
       return rows
     } catch (error) {
       console.error('Error fetching applications:', error)
-      throw new Error('Failed to fetch applications')
+      throw error instanceof Error ? error : new Error('Failed to fetch applications')
     }
   })
 
 // Get application by ID
 export const getApplicationByIdFn = createServerFn()
-  .inputValidator((input: { id: number }) => input)
+  .inputValidator((input: { id: number; userId: string }) => input)
   .handler(async ({ data }) => {
     try {
-      const { id } = data
-      const row = await getApplicationById(id)
+      const { id, userId } = data
+      if (!userId) {
+        throw new Error('Unauthorized')
+      }
+      const row = await getApplicationById(id, userId)
       if (!row) {
         throw new Error('Application not found')
       }
@@ -47,28 +53,34 @@ export const getApplicationByIdFn = createServerFn()
 
 // Search applications
 export const searchApplicationsFn = createServerFn()
-  .inputValidator((input: { query: string; starredOnly?: boolean; activeOnly?: boolean }) => input)
+  .inputValidator((input: { query: string; starredOnly?: boolean; activeOnly?: boolean; userId: string }) => input)
   .handler(async ({ data }) => {
     try {
-      const { query, starredOnly, activeOnly } = data
+      const { query, starredOnly, activeOnly, userId } = data
+      if (!userId) {
+        throw new Error('Unauthorized')
+      }
       if (!query || query.trim().length === 0) {
         return []
       }
       const searchTerm = `%${query}%`
-      const rows = await searchApplications(searchTerm, starredOnly, activeOnly)
+      const rows = await searchApplications(searchTerm, userId, starredOnly, activeOnly)
       return rows.map(rowToApplication)
     } catch (error) {
       console.error('Error searching applications:', error)
-      throw new Error('Failed to search applications')
+      throw error instanceof Error ? error : new Error('Failed to search applications')
     }
   })
 
 // Create application
 export const createApplicationFn = createServerFn()
-  .inputValidator((input: { application: JobApplication }) => input)
+  .inputValidator((input: { application: JobApplication; userId: string }) => input)
   .handler(async ({ data }) => {
     try {
-      const { application } = data
+      const { application, userId } = data
+      if (!userId) {
+        throw new Error('Unauthorized')
+      }
 
       if (!application.company || !application.position || !application.dateApplied) {
         throw new Error('Company, position, and date applied are required')
@@ -78,7 +90,7 @@ export const createApplicationFn = createServerFn()
         throw new Error('Invalid status')
       }
 
-      const newApplication = await insertApplication(application)
+      const newApplication = await insertApplication(application, userId)
       return rowToApplication(newApplication)
     } catch (error) {
       console.error('Error creating application:', error)
@@ -88,14 +100,12 @@ export const createApplicationFn = createServerFn()
 
 // Update application
 export const updateApplicationFn = createServerFn()
-  .inputValidator((input: { id: number; application: JobApplication }) => input)
+  .inputValidator((input: { id: number; application: JobApplication; userId: string }) => input)
   .handler(async ({ data }) => {
     try {
-      const { id, application } = data
-
-      const existing = await getApplicationById(id)
-      if (!existing) {
-        throw new Error('Application not found')
+      const { id, application, userId } = data
+      if (!userId) {
+        throw new Error('Unauthorized')
       }
 
       if (!application.company || !application.position || !application.dateApplied) {
@@ -106,12 +116,12 @@ export const updateApplicationFn = createServerFn()
         throw new Error('Invalid status')
       }
 
-      await updateApplication(
-        id,
-        application
-      )
+      await updateApplication(id, application, userId)
 
-      const updated = await getApplicationById(id)
+      const updated = await getApplicationById(id, userId)
+      if (!updated) {
+        throw new Error('Application not found')
+      }
       return rowToApplication(updated)
     } catch (error) {
       console.error('Error updating application:', error)
@@ -121,17 +131,15 @@ export const updateApplicationFn = createServerFn()
 
 // Delete application
 export const deleteApplicationFn = createServerFn()
-  .inputValidator((input: { id: number }) => input)
+  .inputValidator((input: { id: number; userId: string }) => input)
   .handler(async ({ data }) => {
     try {
-      const { id } = data
-
-      const existing = await getApplicationById(id)
-      if (!existing) {
-        throw new Error('Application not found')
+      const { id, userId } = data
+      if (!userId) {
+        throw new Error('Unauthorized')
       }
 
-      await deleteApplication(id)
+      await deleteApplication(id, userId)
       return { success: true }
     } catch (error) {
       console.error('Error deleting application:', error)
@@ -141,17 +149,15 @@ export const deleteApplicationFn = createServerFn()
 
 // Toggle star status
 export const toggleStarApplicationFn = createServerFn()
-  .inputValidator((input: { id: number }) => input)
+  .inputValidator((input: { id: number; userId: string }) => input)
   .handler(async ({ data }) => {
     try {
-      const { id } = data
-
-      const existing = await getApplicationById(id)
-      if (!existing) {
-        throw new Error('Application not found')
+      const { id, userId } = data
+      if (!userId) {
+        throw new Error('Unauthorized')
       }
 
-      const updated = await toggleStarApplication(id)
+      const updated = await toggleStarApplication(id, userId)
       return rowToApplication(updated)
     } catch (error) {
       console.error('Error toggling star status:', error)
@@ -161,10 +167,14 @@ export const toggleStarApplicationFn = createServerFn()
 
 // Get statistics
 export const getStatisticsFn = createServerFn()
-  .inputValidator((input: undefined) => input)
-  .handler(async () => {
+  .inputValidator((input: { userId: string }) => input)
+  .handler(async ({ data }) => {
     try {
-      const allRows = await getAllApplications()
+      const { userId } = data
+      if (!userId) {
+        return { total: 0, byStatus: {} }
+      }
+      const allRows = await getAllApplications(userId)
       const total = allRows.length
       const byStatus: Record<string, number> = allRows.reduce((acc: Record<string, number>, row: any) => {
         const status = row.status as string

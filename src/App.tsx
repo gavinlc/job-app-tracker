@@ -31,18 +31,21 @@ function App() {
     }
   }, [isAuthenticated, authLoading, navigate]);
 
+  // Get user ID from user object
+  const userId = user?.id || null;
+
   // Use search query if provided, otherwise use filtered applications
   const shouldSearch = searchQuery.trim().length > 0;
-  const { data: searchResults } = useSearchApplications(searchQuery, shouldSearch, filterStarred, filterActive);
-  const { data: applications = [], isLoading, error } = useApplications(shouldSearch ? null : filterStatus, filterStarred, filterActive);
+  const { data: searchResults } = useSearchApplications(searchQuery, shouldSearch, filterStarred, filterActive, userId);
+  const { data: applications = [], isLoading, error } = useApplications(userId, shouldSearch ? null : filterStatus, filterStarred, filterActive);
 
   // Determine which data to display
   const displayApplications = shouldSearch ? (searchResults || []) : applications;
 
-  const createMutation = useCreateApplication();
-  const updateMutation = useUpdateApplication();
-  const deleteMutation = useDeleteApplication();
-  const toggleStarMutation = useToggleStarApplication();
+  const createMutation = useCreateApplication(userId);
+  const updateMutation = useUpdateApplication(userId);
+  const deleteMutation = useDeleteApplication(userId);
+  const toggleStarMutation = useToggleStarApplication(userId);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -150,7 +153,7 @@ function App() {
 
       <main className="p-4">
         <section className="max-w-7xl mx-auto flex flex-col gap-4">
-          <Statistics onFilterByStatus={handleFilterByStatus} selectedStatus={filterStatus} />
+          <Statistics onFilterByStatus={handleFilterByStatus} selectedStatus={filterStatus} userId={userId} />
           <Toolbar
             viewMode={viewMode}
             onViewModeChange={(value) => setViewMode(value as ViewMode)}

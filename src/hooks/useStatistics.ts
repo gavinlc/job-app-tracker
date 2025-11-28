@@ -1,13 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { getStatisticsFn } from '../lib/server';
 
-export function useStatistics() {
+export function useStatistics(userId: string | null) {
   return useQuery({
-    queryKey: ['statistics'],
+    queryKey: ['statistics', userId],
     queryFn: async () => {
-      const result = await getStatisticsFn({ data: undefined })
+      if (!userId) {
+        return { total: 0, byStatus: {} }
+      }
+      const result = await getStatisticsFn({ data: { userId } })
       return result
     },
+    enabled: !!userId,
   });
 }
 

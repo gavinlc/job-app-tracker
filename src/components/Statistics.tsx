@@ -4,10 +4,11 @@ import { Card, CardContent } from './ui/card';
 interface StatisticsProps {
   onFilterByStatus: (status: string | null) => void;
   selectedStatus: string | null;
+  userId: string | null;
 }
 
-function Statistics({ onFilterByStatus, selectedStatus }: StatisticsProps) {
-  const { data: stats = { total: 0, byStatus: {} }, isLoading } = useStatistics();
+function Statistics({ onFilterByStatus, selectedStatus, userId }: StatisticsProps) {
+  const { data: stats = { total: 0, byStatus: {} }, isLoading } = useStatistics(userId);
 
   const statusLabels: Record<string, string> = {
     interested: 'Interested',

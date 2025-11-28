@@ -22,47 +22,54 @@ export const applicationKeys = {
 };
 
 // Get all applications (optionally filtered by status, starred, and active)
-export function useApplications(status: string | null = null, starredOnly: boolean = false, activeOnly: boolean = false) {
+export function useApplications(userId: string | null, status: string | null = null, starredOnly: boolean = false, activeOnly: boolean = false) {
   return useQuery({
-    queryKey: [...applicationKeys.list(status), starredOnly ? 'starred' : 'all', activeOnly ? 'active' : 'all'],
+    queryKey: [...applicationKeys.list(status), starredOnly ? 'starred' : 'all', activeOnly ? 'active' : 'all', userId],
     queryFn: async () => {
-      const result = await getAllApplicationsFn({ data: { status, starredOnly, activeOnly } })
+      if (!userId) return []
+      const result = await getAllApplicationsFn({ data: { status, starredOnly, activeOnly, userId } })
       return result
     },
+    enabled: !!userId,
   });
 }
 
 // Search applications
-export function useSearchApplications(query: string, enabled: boolean = true, starredOnly: boolean = false, activeOnly: boolean = false) {
+export function useSearchApplications(query: string, enabled: boolean = true, starredOnly: boolean = false, activeOnly: boolean = false, userId: string | null = null) {
   return useQuery({
-    queryKey: [...applicationKeys.search(query), starredOnly ? 'starred' : 'all', activeOnly ? 'active' : 'all'],
+    queryKey: [...applicationKeys.search(query), starredOnly ? 'starred' : 'all', activeOnly ? 'active' : 'all', userId],
     queryFn: async () => {
-      const result = await searchApplicationsFn({ data: { query, starredOnly, activeOnly } })
+      if (!userId) return []
+      const result = await searchApplicationsFn({ data: { query, starredOnly, activeOnly, userId } })
       return result
     },
-    enabled: enabled && query.trim().length > 0,
+    enabled: enabled && query.trim().length > 0 && !!userId,
   });
 }
 
 // Get single application
-export function useApplication(id: number | undefined) {
+export function useApplication(id: number | undefined, userId: string | null) {
   return useQuery({
-    queryKey: applicationKeys.detail(id!),
+    queryKey: [...applicationKeys.detail(id!), userId],
     queryFn: async () => {
-      const result = await getApplicationByIdFn({ data: { id: id! } })
+      if (!userId || !id) return null
+      const result = await getApplicationByIdFn({ data: { id, userId } })
       return result
     },
-    enabled: !!id,
+    enabled: !!id && !!userId,
   });
 }
 
 // Create application mutation
-export function useCreateApplication() {
+export function useCreateApplication(userId: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (application: JobApplication) => {
-      const result = await createApplicationFn({ data: { application } })
+      if (!userId) {
+        throw new Error('User ID is required')
+      }
+      const result = await createApplicationFn({ data: { application, userId } })
       return result
     },
     onSuccess: () => {
@@ -73,12 +80,15 @@ export function useCreateApplication() {
 }
 
 // Update application mutation
-export function useUpdateApplication() {
+export function useUpdateApplication(userId: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, application }: { id: number; application: JobApplication }) => {
-      const result = await updateApplicationFn({ data: { id, application } })
+      if (!userId) {
+        throw new Error('User ID is required')
+      }
+      const result = await updateApplicationFn({ data: { id, application, userId } })
       return result
     },
     onSuccess: (data, variables) => {
@@ -90,12 +100,15 @@ export function useUpdateApplication() {
 }
 
 // Delete application mutation
-export function useDeleteApplication() {
+export function useDeleteApplication(userId: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id: number) => {
-      const result = await deleteApplicationFn({ data: { id } })
+      if (!userId) {
+        throw new Error('User ID is required')
+      }
+      const result = await deleteApplicationFn({ data: { id, userId } })
       return result
     },
     onSuccess: () => {
@@ -106,12 +119,15 @@ export function useDeleteApplication() {
 }
 
 // Toggle star status mutation
-export function useToggleStarApplication() {
+export function useToggleStarApplication(userId: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id: number) => {
-      const result = await toggleStarApplicationFn({ data: { id } })
+      if (!userId) {
+        throw new Error('User ID is required')
+      }
+      const result = await toggleStarApplicationFn({ data: { id, userId } })
       return result
     },
     onSuccess: (data, id) => {

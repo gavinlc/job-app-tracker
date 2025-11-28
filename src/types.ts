@@ -11,6 +11,7 @@ export interface JobApplication {
   contactName?: string;
   contactEmail?: string;
   isStarred?: boolean;
+  userId?: string;
   createdAt?: string;
   updatedAt?: string;
 }
