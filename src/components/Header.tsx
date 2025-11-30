@@ -12,7 +12,7 @@ export function Header({ user, onSignOut }: HeaderProps) {
     <header className="bg-white/95 backdrop-blur-sm shadow-md border-b">
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <div className="text-center flex-1">
+          <div className="text-left flex-1">
             <h1 className="text-3xl font-bold text-slate-900 mb-1">Job Application Tracker</h1>
             <p className="text-sm text-slate-600">Track and manage your job applications</p>
           </div>
