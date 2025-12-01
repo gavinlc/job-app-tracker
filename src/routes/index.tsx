@@ -4,6 +4,13 @@ import App from '../App'
 export const Route = createFileRoute('/')({
   // Disable SSR to avoid hydration mismatches with React Query Suspense
   ssr: false,
+  head: () => ({
+    meta: [
+      {
+        title: 'Job Application Tracker',
+      },
+    ],
+  }),
   component: App,
 })
 
